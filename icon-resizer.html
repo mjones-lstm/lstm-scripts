@@ -23,7 +23,7 @@
     <h2>LSTM Icon Processor</h2>
     <div id="drop-zone">
         <div><strong>Drop PNG icons here</strong></div>
-        <div class="info">Output: 160x160px (27px padding)<br>Format: lstm-icon-[random].png</div>
+        <div class="info">Output: 160x160px (25px padding)<br>Format: lstm-icon-[random].png</div>
     </div>
     <div id="status">Ready</div>
 
@@ -87,7 +87,7 @@
                     img.src = event.target.result;
                     img.onload = () => {
                         const targetSize = 160;
-                        const padding = 27;
+                        const padding = 25;
                         const iconSize = targetSize - (padding * 2);
 
                         // --- High Quality Scaling Logic ---
