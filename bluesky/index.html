@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel='stylesheet' id='app-css' href='https://lstm-wp.madebybloom.co.uk/wp-content/themes/bloom/assets/css/app.css?ver=1.012' media='all' />
+<meta charset="UTF-8">
+<title>Bluesky</title>
+
+</head>
+<body>
+
+
+<section class="text-intro panel-p panel-sp-shallow bg-burgundy pb-xl-6" id="">
+    <div class="text-intro__inner inner">
+        <div class="row gy-2 gx-md-4 gx-lg-2">
+            <div class="col-md-10">
+                <div class="text-intro__text">
+                                            <h2 class="text-intro__title">Latest on <em>Bluesky</em>
+</h2>
+                                                                            </div>
+            </div>
+                    </div>
+    </div>
+</section>
+
+  <div class="text-card-row panel-p-small panel-sp-shallow no bg-burgundy">
+    <div class="text-card-row__inner inner">
+      <div id="bsky-feed" class="row gy-3 gx-lg-6 gy-lg-0 gx-xxl-8">
+        <div id="bsky-status">
+        <div> init</div>
+        </div>
+      </div>
+    </div>
+  </div>
+   
+
+<script>
+(async function() {
+    const handle = 'lstmnews.bsky.social'; // Change this to your handle (no @)
+    const statusEl = document.getElementById('bsky-status');
+    const feedEl = document.getElementById('bsky-feed');
+    const debugEl = document.getElementById('bsky-debug');
+
+    function showError(msg, details) {
+        statusEl.innerText = "Error loading feed.";
+        debugEl.style.display = "block";
+        debugEl.innerHTML = `<strong>Error:</strong> ${msg}<br><small>${details}</small>`;
+        console.error("BSKY Error:", msg, details);
+    }
+
+    try {
+        statusEl.innerText = "Connecting to AT Protocol...";
+
+        // 1. Resolve Handle to DID (This is the most stable way)
+        const resolveRes = await fetch(`https://public.api.bsky.app/xrpc/com.atproto.identity.resolveHandle?handle=${handle}`);
+        
+        if (!resolveRes.ok) {
+            throw new Error(`Handle not found. Check if "${handle}" is correct.`);
+        }
+        const { did } = await resolveRes.json();
+
+        statusEl.innerText = "Fetching posts...";
+
+        // 2. Get the Feed using the DID
+        const feedRes = await fetch(`https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed?actor=${did}&limit=3`);
+        
+        if (!feedRes.ok) {
+            throw new Error(`API returned ${feedRes.status}. The server might be blocking the request.`);
+        }
+        const data = await feedRes.json();
+
+        // 3. Render
+        if (!data.feed || data.feed.length === 0) {
+            statusEl.innerText = "No posts found.";
+            return;
+        }
+
+        feedEl.innerHTML = ''; // Clear status
+        data.feed.forEach(item => {
+            const post = item.post;
+            const postEl = document.createElement('div');
+            postEl.classList.add('col-md-6','col-lg-4');
+            postEl.innerHTML = `
+                <div class="card-text-cta">
+                    <div class="card-text-cta__inner">
+                        <div class="small-text mb-xl-2">${new Date(post.record.createdAt).toLocaleDateString()}</div>
+                        <p>${post.record.text}</p>
+                        <a href="https://bsky.app/profile/${handle}/post/${post.uri.split('/').pop()}" class="btn btn-light mt-3">View on bluesky</a>
+                    </div>
+               
+            </div>`;
+            feedEl.appendChild(postEl);
+        });
+
+    } catch (err) {
+        showError(err.message, err.stack || "Network Error");
+    }
+})();
+</script>
+</body>
+</html>
